@@ -1,6 +1,7 @@
 import './transfer';
 import { wrap, proxy } from 'comlink'
 import { Obj, LoopCallback, LooperMap } from './types.js';
+import { WorkerLooper } from './worker';
 
 
 
@@ -25,7 +26,7 @@ import { Obj, LoopCallback, LooperMap } from './types.js';
 //   }
 // });
 
-type LoopWrap = (v: LoopCallback) => void
+type LoopWrap = (v: (data: number, cb?: LoopCallback) => void) => void
 
 type LoopWrapMap = {
   looperA: LoopWrap,
@@ -40,15 +41,36 @@ const callbackB: LoopCallback = (data) => {
   console.log(`B: ${data}`);
 }
 
+const responseCallback: LoopCallback = (name: string, data: number) => {
+  console.log(`from ${name} : ${data}`)
+}
+
 const worker = new Worker("./worker.ts");
-const api = wrap<LoopWrapMap>(worker);
+const api = wrap<WorkerLooper>(worker);
 
 const proxyCallbackA = proxy(callbackA);
 const proxyCallbackB = proxy(callbackB)
 
 async function init() {
-  await api.looperA(proxyCallbackA);
-  await api.looperB(proxyCallbackB);
+  // await api.registerLooper('proxyA', 1000)(proxyCallbackA);
+  // await api.registerLooper('proxyB', 2000)(proxyCallbackB);
+  // const ret1 = await api.innerMap;
+  // console.log(ret1);
+  // await api.registerLooper('proxyA', 1000);
+  // const ret2 = await (api as any)['proxyA'];
+  // console.log(ret2);
+  await api.responseCallback(proxy(responseCallback));
+  await api.registerLooper('timerA', {
+    url: 'http://test',
+    interval: 1000,
+    data: 0
+  })
+  await api.registerLooper('timerB', {
+    url: 'http://test-b',
+    interval: 2000,
+    data: 1
+  })
+
 }
 
 init();

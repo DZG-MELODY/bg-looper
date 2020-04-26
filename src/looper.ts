@@ -1,4 +1,17 @@
-type LooperState = 'ready' | 'pending' | 'idle'
+// 轮询器状态
+export type LooperState = 'ready' | 'pending' | 'idle'
+
+export interface LooperRequestConfig {
+  method?: "get" | "post"
+  url: string
+}
+
+// 轮询器参数配置
+export interface LooperConfig {
+  id: string,
+  interval?: number
+  requestConfig: LooperRequestConfig
+}
 
 export class Looper {
 
@@ -6,37 +19,57 @@ export class Looper {
   private timer: number | null = null
   private interval: number = 500
   private state: LooperState = "ready"
-  private url: string = ""
-  private requestOptions: Request | null = null
-  private callback: (data: unknown) => void | null = null
+  // todo: 要修正
+  private reqConfig: LooperRequestConfig = {
+    method: "get",
+    url: ""
+  }
+  private callback: (name: string, data: unknown) => void
 
-  constructor(url: string, requestOptions: RequestInit, cb: (data: unknown) => void, interval: number) {
-    this.url = url;
-    this.requestOptions = new Request(this.url, requestOptions);
-    this.interval = interval;
-    this.callback = cb;
+  constructor(config: LooperConfig, responseCallback: (name: string, data: unknown) => void) {
+    const { id, interval } = config;
+    if (!id) throw new Error('id must not be empty')
+    this.id = id;
+    this.interval = interval || 500;
+    this.reqConfig = config.requestConfig;
+    this.callback = responseCallback;
+    this.state = 'ready';
   }
 
-  private loop() {
-    if (this.requestOptions === null) {
-      throw new Error('request options is null')
-    }
-    this.state = "pending"
-    fetch(this.requestOptions).then((data) => {
-      this.state = "idle"
-      if (this.callback) this.callback(data)
-    })
+  private loopHandler() {
+    if (this.state !== "idle") return
+    this.state = "pending";
+    fetch(this.reqConfig.url)
+      .then(response => response.json())
+      .then((data) => {
+        this.state = "idle";
+        this.callback(this.id, data)
+      })
+      .catch(err => {
+        this.state = "idle";
+        this.callback(this.id, err)
+      })
   }
 
   public start(): boolean {
+    if (this.timer) return false;
+    this.state = "idle";
+    this.timer = setInterval(() => {
+      this.loopHandler()
+    }, this.interval);
     return true
   }
 
   public stop(): boolean {
+    if (!this.timer) return false;
+    clearInterval(this.timer);
+    this.timer = null;
     return true
   }
 
   public destroy(): void {
-    // todo:销毁时钟
+    if (!this.timer) return;
+    clearInterval(this.timer);
+    this.timer = null;
   }
 }
