@@ -1,14 +1,16 @@
 import { wrap, proxy } from 'comlink'
 import { CustomCallback } from './types'
 import { LoopWorkerExpose } from './loop-worker';
-import { LooperConfig, Looper } from './looper';
+import { LooperConfig } from './looper';
+// @ts-ignore
+import LoopWorker from 'web-worker:./loop-worker';
 
 
 // 轮询器注册参数配置
 export interface LooperRegisterConfig {
-  name: string
-  looperConfig: LooperConfig
-  responseCallback: (data: unknown, ...rest: Array<unknown>) => void
+  name: string;
+  looperConfig: LooperConfig;
+  responseCallback: (data: unknown, ...rest: Array<unknown>) => void;
 }
 
 // 注册轮询器映射表
@@ -22,29 +24,29 @@ const responseCallback: CustomCallback<unknown> = (name: string, data: unknown) 
 // 统一响应回调方法代理
 const responseCallbackProxy = proxy(responseCallback);
 // worker线程暴露对象
-const workerApi = wrap<LoopWorkerExpose>(new Worker('./loop-worker.ts'));
+const workerApi = wrap<LoopWorkerExpose>(new LoopWorker());
 
-const init = async () => {
+const init = async (): Promise<void> => {
   await workerApi.responseCallback(responseCallbackProxy);
 }
 
-const registerLooper = async (name: string, config: LooperRegisterConfig) => {
+const registerLooper = async (name: string, config: LooperRegisterConfig): Promise<boolean> => {
   const ret = await workerApi.registerLooper(name, config.looperConfig);
   if (ret) registerLoopMap.set(name, config);
   return ret;
 }
 
-const startLooper = async (name: string) => {
+const startLooper = async (name: string): Promise<boolean> => {
   const ret = await workerApi.startLooper(name);
   return ret;
 }
 
-const stopLooper = async (name: string) => {
+const stopLooper = async (name: string): Promise<boolean> => {
   const ret = await workerApi.stopLooper(name);
   return ret;
 }
 
-const destroyLooper = async (name: string) => {
+const destroyLooper = async (name: string): Promise<boolean> => {
   const ret = await workerApi.destroyLooper(name);
   return ret;
 }

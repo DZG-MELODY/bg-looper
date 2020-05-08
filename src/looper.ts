@@ -2,22 +2,22 @@
 export type LooperState = 'ready' | 'pending' | 'idle'
 
 export interface LooperRequestConfig {
-  method?: "get" | "post"
-  url: string
+  method?: "get" | "post";
+  url: string;
 }
 
 // 轮询器参数配置
 export interface LooperConfig {
-  id: string,
-  interval?: number
-  requestConfig: LooperRequestConfig
+  id: string;
+  interval?: number;
+  requestConfig: LooperRequestConfig;
 }
 
 export class Looper {
 
-  public id: string = ''
-  private timer: number | null = null
-  private interval: number = 500
+  public id = ''
+  private timer: NodeJS.Timeout | null = null
+  private interval = 500
   private state: LooperState = "ready"
   // todo: 要修正
   private reqConfig: LooperRequestConfig = {
@@ -36,7 +36,7 @@ export class Looper {
     this.state = 'ready';
   }
 
-  private loopHandler() {
+  private loopHandler(): void {
     if (this.state !== "idle") return
     this.state = "pending";
     fetch(this.reqConfig.url)

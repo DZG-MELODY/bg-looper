@@ -55,10 +55,10 @@ import { LoopCallback } from './types'
 
 
 export interface TimerConfig {
-  url: string
-  interval: number
-  timer?: number | null
-  data: number
+  url: string;
+  interval: number;
+  timer?: number | null;
+  data: number;
 }
 
 class EventEmit {
@@ -66,7 +66,7 @@ class EventEmit {
   public on(cb: (name: string, data: number) => void): void {
     this.events.push(cb);
   }
-  public emit(name: string, data: number) {
+  public emit(name: string, data: number): void {
     for (const cb of this.events) {
       console.log(`to ${name}`)
       cb(name, data)
@@ -95,8 +95,8 @@ const registerLooper = (name: string, config: TimerConfig): void => {
 }
 
 export interface WorkerLooper {
-  responseCallback: (v: (cb: LoopCallback) => void) => void
-  registerLooper: (name: string, config: TimerConfig) => void
+  responseCallback: (v: (cb: LoopCallback) => void) => void;
+  registerLooper: (name: string, config: TimerConfig) => void;
 }
 
 expose({

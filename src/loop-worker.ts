@@ -10,15 +10,15 @@ const looperMap = new Map<string, Looper>()
 
 export interface LoopWorkerExpose {
   // 统一回调函数包裹
-  responseCallback: (v: CustomCallback<unknown> & { [proxyMarker]: true }) => void
+  responseCallback: (v: CustomCallback<unknown> & { [proxyMarker]: true }) => void;
   // 注册一个轮询器
-  registerLooper: (name: string, config: LooperConfig) => boolean
+  registerLooper: (name: string, config: LooperConfig) => boolean;
   // 启动指定轮询器
-  startLooper: (name: string) => boolean
+  startLooper: (name: string) => boolean;
   // 停止指定轮询器
-  stopLooper: (name: string) => boolean
+  stopLooper: (name: string) => boolean;
   // 销毁指定轮询器
-  destroyLooper: (name: string) => boolean
+  destroyLooper: (name: string) => boolean;
 }
 
 // 统一回调函数
